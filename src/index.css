@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Inter', sans-serif;
+  --app-bg: #F8FAFC;
+  --app-surface: rgba(255, 255, 255, 0.9);
+  --app-surface-strong: #ffffff;
+  --app-text: #0F172A;
+  --app-muted: rgba(15, 23, 42, 0.68);
+  --app-border: rgba(15, 23, 42, 0.06);
+  --app-glow: rgba(34, 197, 94, 0.12);
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+:root.dark {
+  color-scheme: dark;
+  --app-bg: #0F172A;
+  --app-surface: rgba(15, 23, 42, 0.92);
+  --app-surface-strong: #0b1220;
+  --app-text: #f8fafc;
+  --app-muted: rgba(248, 250, 252, 0.72);
+  --app-border: rgba(255, 255, 255, 0.06);
+  --app-glow: rgba(34, 197, 94, 0.08);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  background:
+    radial-gradient(circle at top left, rgba(196, 91, 42, 0.16), transparent 30%),
+    radial-gradient(circle at top right, rgba(49, 91, 79, 0.14), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--app-bg) 96%, white) 0%, var(--app-bg) 58%, color-mix(in srgb, var(--app-bg) 92%, #d9cdbb) 100%);
+  color: var(--app-text);
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
