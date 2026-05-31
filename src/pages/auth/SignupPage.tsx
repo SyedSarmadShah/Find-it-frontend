@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
+import PasswordInput from '../../components/ui/PasswordInput'
 import { useAuth } from '../../context/AuthContext'
 
 function getErrorMessage(error: unknown) {
@@ -78,19 +79,20 @@ export default function SignupPage() {
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-          <input
-            className="w-full rounded-2xl border border-black/8 bg-white px-4 py-3.5 text-base text-[#1c1c1e] outline-none transition placeholder:text-black/28 focus:border-[#9a6d5f] focus:ring-4 focus:ring-[#9a6d5f]/10 sm:text-sm"
-            type="password"
-            placeholder="Password"
+          <PasswordInput
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(v) => setForm({ ...form, password: v })}
+            id="password"
+            name="password"
+            placeholder="Password"
           />
-          <input
-            className="w-full rounded-2xl border border-black/8 bg-white px-4 py-3.5 text-base text-[#1c1c1e] outline-none transition placeholder:text-black/28 focus:border-[#9a6d5f] focus:ring-4 focus:ring-[#9a6d5f]/10 sm:text-sm"
-            type="password"
-            placeholder="Confirm password"
+          <PasswordInput
             value={form.password_confirm}
-            onChange={(e) => setForm({ ...form, password_confirm: e.target.value })}
+            onChange={(v) => setForm({ ...form, password_confirm: v })}
+            id="password_confirm"
+            name="password_confirm"
+            placeholder="Confirm password"
+            showChecklist={false}
           />
           <p className="text-xs text-black/40">Use at least 8 characters and avoid common passwords.</p>
         </div>
