@@ -29,12 +29,15 @@ export type ItemClaim = {
   claimant_email: string
   finder: number
   finder_email: string
+  finder_full_name?: string
   answers: {
     brand: string
     unique_marks: string
     item_contents: string
     additional_details: string
   }
+  contact_phone?: string
+  pickup_location?: string
   verification_notes?: string
   status: 'pending' | 'approved' | 'rejected' | 'completed'
   created_at: string
@@ -184,7 +187,10 @@ export async function listClaimReviewQueue() {
   return data
 }
 
-export async function approveClaim(id: number, payload?: { verification_notes?: string }) {
+export async function approveClaim(
+  id: number,
+  payload?: { verification_notes?: string; contact_number?: string; pickup_location?: string },
+) {
   const { data } = await api.post<ItemClaim>(`/items/claims/${id}/approve/`, payload ?? {})
   return data
 }

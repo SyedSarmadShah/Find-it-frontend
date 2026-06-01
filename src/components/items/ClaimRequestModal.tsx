@@ -53,8 +53,8 @@ export default function ClaimRequestModal({ open, itemTitle, onClose, onSubmit }
     'rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-ink/35 focus:border-moss focus:ring-2 focus:ring-moss/15 dark:border-white/10 dark:bg-surface-strong dark:text-paper dark:placeholder:text-paper/35'
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/45 px-3 py-4 backdrop-blur-sm sm:items-center sm:px-6">
-      <div className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-black/10 bg-[color:var(--app-surface)] p-4 shadow-[0_30px_80px_rgba(11,23,39,0.28)] backdrop-blur-xl dark:border-white/10 sm:p-6">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-ink/45 px-3 py-4 backdrop-blur-sm sm:px-6 sm:py-6">
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-[color:var(--app-surface)] p-4 shadow-[0_30px_80px_rgba(11,23,39,0.28)] backdrop-blur-xl dark:border-white/10 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-moss">Claim item</p>
@@ -68,8 +68,9 @@ export default function ClaimRequestModal({ open, itemTitle, onClose, onSubmit }
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={handleSubmit} className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto pr-1">
+            <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium text-ink dark:text-paper">
               What brand is the item?
               <input
@@ -111,15 +112,16 @@ export default function ClaimRequestModal({ open, itemTitle, onClose, onSubmit }
           </label>
 
           {error ? <p className="rounded-2xl bg-rust/10 px-4 py-3 text-sm text-rust dark:bg-rust/15 dark:text-paper">{error}</p> : null}
+          </div>
 
-          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+          <div className="mt-6 flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-end dark:border-white/10">
             <button type="button" onClick={onClose} className="rounded-full bg-black/5 px-5 py-3 text-sm font-semibold text-ink transition hover:bg-black/10 dark:bg-white/5 dark:text-paper dark:hover:bg-white/10">
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-moss px-5 py-3 text-sm font-semibold text-paper transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-moss/15 disabled:translate-y-0 disabled:opacity-60"
+              className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper shadow-[0_12px_28px_rgba(11,23,39,0.22)] transition hover:-translate-y-0.5 hover:bg-navy hover:shadow-lg hover:shadow-ink/15 focus:outline-none focus:ring-2 focus:ring-ink/35 disabled:translate-y-0 disabled:opacity-60"
             >
               {saving ? 'Submitting...' : 'Submit claim'}
             </button>

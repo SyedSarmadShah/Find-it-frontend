@@ -259,7 +259,7 @@ export default function ItemDetailPage() {
             <button
               type="button"
               onClick={() => setClaimOpen(true)}
-              className="w-fit rounded-full bg-moss px-5 py-2 text-sm font-semibold text-paper shadow-[0_12px_24px_rgba(31,86,74,0.16)] transition hover:-translate-y-0.5 hover:opacity-95"
+              className="w-fit rounded-full bg-secondary px-5 py-2 text-sm font-semibold text-paper shadow-[0_12px_24px_rgba(20,83,45,0.24)] transition hover:-translate-y-0.5 hover:bg-ink"
             >
               Claim Item
             </button>

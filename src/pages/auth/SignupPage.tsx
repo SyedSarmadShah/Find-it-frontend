@@ -44,15 +44,19 @@ export default function SignupPage() {
   const { signup } = useAuth()
   const [form, setForm] = useState({ email: '', full_name: '', password: '', password_confirm: '' })
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setIsSubmitting(true)
     try {
       await signup(form)
       navigate('/dashboard')
     } catch (error) {
       setError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -65,7 +69,7 @@ export default function SignupPage() {
       footerLinkText="Log in"
       footerLinkTo="/login"
     >
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} aria-busy={isSubmitting}>
         <div className="space-y-3">
           <input
             className="w-full rounded-2xl border border-black/8 bg-white px-4 py-3.5 text-base text-[#1c1c1e] outline-none transition placeholder:text-black/28 focus:border-[#9a6d5f] focus:ring-4 focus:ring-[#9a6d5f]/10 sm:text-sm"
@@ -98,10 +102,11 @@ export default function SignupPage() {
         </div>
         {error ? <p className="text-sm text-[#9a4d43]">{error}</p> : null}
         <button
-          className="w-full rounded-2xl bg-[#a36d7c] px-4 py-3.5 font-medium text-white shadow-[0_16px_32px_rgba(163,109,124,0.28)] transition hover:-translate-y-0.5 hover:bg-[#94616f]"
+          className="w-full rounded-2xl bg-[#a36d7c] px-4 py-3.5 font-medium text-white shadow-[0_16px_32px_rgba(163,109,124,0.28)] transition hover:-translate-y-0.5 hover:bg-[#94616f] active:translate-y-0 focus:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:bg-[#a36d7c]"
           type="submit"
+          disabled={isSubmitting}
         >
-          Sign Up
+          {isSubmitting ? 'Signing up...' : 'Sign Up'}
         </button>
       </form>
     </AuthLayout>

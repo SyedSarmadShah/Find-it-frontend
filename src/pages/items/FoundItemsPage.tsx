@@ -69,21 +69,7 @@ export default function FoundItemsPage() {
         title="Browse recovered items"
         description="See what has been recovered, then filter by keyword, category, or status to find a likely match faster."
       />
-      <section className="grid gap-3 rounded-[1.5rem] bg-moss p-5 text-paper dark:bg-paper dark:text-ink sm:gap-4 sm:p-6 lg:ml-auto lg:max-w-md">
-        <div>
-          <div className="text-sm uppercase tracking-[0.18em] text-paper/60 dark:text-ink/55">Quick stats</div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-white/10 p-4 dark:bg-ink/5">
-              <p className="text-2xl font-bold">Shared</p>
-              <p className="mt-1 text-sm text-paper/70 dark:text-ink/60">Community recovery</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4 dark:bg-ink/5">
-              <p className="text-2xl font-bold">Open</p>
-              <p className="mt-1 text-sm text-paper/70 dark:text-ink/60">Ready to claim</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Quick stats removed per user request */}
 
       <SearchFilters
         title="Refine found item reports"

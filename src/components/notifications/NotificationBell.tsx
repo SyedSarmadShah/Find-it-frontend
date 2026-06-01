@@ -152,7 +152,7 @@ export default function NotificationBell() {
           <path d="M9.5 18a2.5 2.5 0 0 0 5 0" />
         </svg>
         {unreadCount > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-rust px-1.5 py-0.5 text-[10px] font-bold leading-none text-paper shadow-lg">
+          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-rust px-1.5 py-0.5 text-[10px] font-bold leading-none text-ink dark:text-paper shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         ) : null}

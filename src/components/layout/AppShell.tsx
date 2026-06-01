@@ -73,6 +73,9 @@ export default function AppShell() {
             <NavLink to="/items/found" className={navClass}>
               Found Items
             </NavLink>
+            <NavLink to="/claims/review" className={navClass}>
+              Claim Requests
+            </NavLink>
             <NavLink
               to="/items/new"
               className={() =>
@@ -133,6 +136,9 @@ export default function AppShell() {
             <NavLink to="/items/found" className={navClass} onClick={() => setMenuOpen(false)}>
               Found Items
             </NavLink>
+            <NavLink to="/claims/review" className={navClass} onClick={() => setMenuOpen(false)}>
+              Claim Requests
+            </NavLink>
             <NavLink
               to="/items/new"
               onClick={() => setMenuOpen(false)}
@@ -180,8 +186,8 @@ export default function AppShell() {
             to="/items/new"
             className={({ isActive }) =>
               isActive
-                ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-white bg-black rounded-xl px-3 py-2'
-                : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-white bg-black rounded-xl px-3 py-2'
+                ? 'flex flex-1 flex-col items-center gap-1 text-xs font-medium text-white bg-black rounded-xl px-3 py-2'
+                : 'flex flex-1 flex-col items-center gap-1 text-xs text-white bg-black rounded-xl px-3 py-2'
             }
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -190,6 +196,10 @@ export default function AppShell() {
           <NavLink to="/items/found" className={({ isActive }) => (isActive ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-ink' : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink/70') }>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/></svg>
             <span>Found</span>
+          </NavLink>
+          <NavLink to="/claims/review" className={({ isActive }) => (isActive ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-ink' : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink/70') }>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span>Claims</span>
           </NavLink>
           <NavLink to="/notifications" className={({ isActive }) => (isActive ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-ink' : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink/70') }>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

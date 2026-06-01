@@ -10,6 +10,7 @@ import FoundItemsPage from '../pages/items/FoundItemsPage'
 import NewItemPage from '../pages/items/NewItemPage'
 import EditItemPage from '../pages/items/EditItemPage'
 import ItemDetailPage from '../pages/items/ItemDetailPage'
+import ClaimReviewQueuePage from '../pages/items/ClaimReviewQueuePage'
 
 export default function AppRouter() {
   return (
@@ -29,6 +30,7 @@ export default function AppRouter() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/items/lost" element={<LostItemsPage />} />
         <Route path="/items/found" element={<FoundItemsPage />} />
+        <Route path="/claims/review" element={<ClaimReviewQueuePage />} />
         <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route path="/items/new" element={<NewItemPage />} />
         <Route path="/items/:id/edit" element={<EditItemPage />} />

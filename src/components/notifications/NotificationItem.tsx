@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Notification } from '../../services/itemService'
 import { formatNotificationTimestamp, notificationTypeLabels, notificationTypeTones } from './notificationUtils'
 
@@ -37,6 +38,16 @@ export default function NotificationItem({ notification, compact = false, busy =
           <p className={`mt-2 text-sm leading-6 ${compact ? 'text-ink/65 dark:text-paper/65' : 'text-ink/70 dark:text-paper/70'}`}>
             {notification.message}
           </p>
+          {notification.type === 'claim_request_received' ? (
+            <div className="mt-3">
+              <Link
+                to="/claims/review"
+                className="inline-flex items-center rounded-full border border-black/10 px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-black/5 dark:border-white/10 dark:text-paper dark:hover:bg-white/10"
+              >
+                Review claim
+              </Link>
+            </div>
+          ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink/45 dark:text-paper/45">
             <span>{formatNotificationTimestamp(notification.created_at)}</span>
             {unread ? <span className="rounded-full bg-moss/10 px-2 py-1 font-semibold text-moss dark:bg-moss/20 dark:text-paper">Unread</span> : null}

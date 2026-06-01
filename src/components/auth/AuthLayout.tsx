@@ -32,36 +32,6 @@ export default function AuthLayout({
           <div className="mt-2 w-full max-w-md sm:mt-4">
             {children}
 
-            <div className="mt-8 flex items-center gap-4">
-              <div className="h-px flex-1 bg-black/10" />
-              <span className="whitespace-nowrap text-xs font-medium uppercase tracking-[0.22em] text-black/42">Or continue with</span>
-              <div className="h-px flex-1 bg-black/10" />
-            </div>
-
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <button
-                className="flex h-12 items-center justify-center rounded-2xl border border-black/8 bg-white text-xl shadow-[0_12px_24px_rgba(17,17,17,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(17,17,17,0.12)]"
-                type="button"
-                aria-label="Continue with Google"
-              >
-                G
-              </button>
-              <button
-                className="flex h-12 items-center justify-center rounded-2xl border border-black/8 bg-white text-xl shadow-[0_12px_24px_rgba(17,17,17,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(17,17,17,0.12)]"
-                type="button"
-                aria-label="Continue with Apple"
-              >
-                A
-              </button>
-              <button
-                className="flex h-12 items-center justify-center rounded-2xl border border-black/8 bg-white text-xl shadow-[0_12px_24px_rgba(17,17,17,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(17,17,17,0.12)]"
-                type="button"
-                aria-label="Continue with Facebook"
-              >
-                f
-              </button>
-            </div>
-
             <p className="mt-8 text-sm text-[#5f5954]">
               {footerLabel}{' '}
               <Link className="font-semibold text-[#1c1c1e] underline decoration-[#1c1c1e]/25 underline-offset-4 transition hover:decoration-[#1c1c1e]/55" to={footerLinkTo}>

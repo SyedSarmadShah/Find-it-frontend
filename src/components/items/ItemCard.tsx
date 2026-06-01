@@ -58,12 +58,23 @@ export default function ItemCard({ id, itemType = 'lost', title, description, ca
           </span>
         </div>
         {showActions ? (
-          <Link
-            to={detailsHref}
-            className="absolute right-3 top-3 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink shadow-[0_10px_24px_rgba(11,23,39,0.15)] transition duration-200 hover:-translate-y-0.5 hover:bg-paper focus:outline-none focus:ring-2 focus:ring-moss/40 dark:border-white/15 dark:bg-surface-strong dark:text-paper sm:right-4 sm:top-4 sm:px-4 sm:text-[11px] sm:tracking-[0.2em]"
-          >
-            View details
-          </Link>
+          <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-2 sm:right-4 sm:top-4">
+            <Link
+              to={detailsHref}
+              className="inline-flex items-center justify-center rounded-full border border-white/70 bg-white/95 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink shadow-[0_10px_24px_rgba(11,23,39,0.15)] transition duration-200 hover:-translate-y-0.5 hover:bg-paper focus:outline-none focus:ring-2 focus:ring-moss/40 dark:border-white/15 dark:bg-surface-strong dark:text-paper sm:px-4 sm:py-2.5 sm:text-[11px] sm:tracking-[0.2em]"
+            >
+              View details
+            </Link>
+            {itemType === 'found' && onClaim ? (
+              <button
+                type="button"
+                onClick={onClaim}
+                className="inline-flex items-center justify-center rounded-full bg-ink px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-paper shadow-[0_10px_24px_rgba(11,23,39,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-navy hover:shadow-lg hover:shadow-ink/15 focus:outline-none focus:ring-2 focus:ring-ink/35 sm:px-4 sm:py-2.5 sm:text-[11px] sm:tracking-[0.2em]"
+              >
+                Claim item
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
@@ -78,19 +89,6 @@ export default function ItemCard({ id, itemType = 'lost', title, description, ca
           <p className="text-sm leading-6 text-ink/70 dark:text-paper/70">{description}</p>
         </div>
 
-        {showActions ? (
-          <div className="flex flex-col gap-3 sm:flex-row">
-            {itemType === 'found' && onClaim ? (
-              <button
-                type="button"
-                onClick={onClaim}
-                className="inline-flex w-full items-center justify-center rounded-full bg-moss px-5 py-3 text-sm font-semibold text-paper transition duration-200 hover:-translate-y-0.5 hover:bg-moss/95 hover:shadow-lg hover:shadow-moss/10 sm:w-auto"
-              >
-                Claim Item
-              </button>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </article>
   )
