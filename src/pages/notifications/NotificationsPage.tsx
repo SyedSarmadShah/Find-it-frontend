@@ -8,6 +8,7 @@ import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  confirmClaimReceived,
   type Notification,
 } from '../../services/itemService'
 
@@ -53,6 +54,23 @@ export default function NotificationsPage() {
       showToast('Notification deleted.', 'info')
     } catch {
       showToast('Unable to delete notification.', 'error')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleConfirmReceived = async (claimId: number) => {
+    const previous = notifications.slice()
+    setBusyId(claimId)
+    // optimistic update
+    setNotifications((current) => current.map((n) => (n.reference_id === claimId ? { ...n, is_read: true } : n)))
+    window.dispatchEvent(new Event('claims:updated'))
+    try {
+      await confirmClaimReceived(claimId)
+      showToast('Marked as received. Claim completed.', 'success')
+    } catch {
+      setNotifications(previous)
+      showToast('Unable to confirm receipt right now.', 'error')
     } finally {
       setBusyId(null)
     }
@@ -120,6 +138,7 @@ export default function NotificationsPage() {
                 busy={busyId === notification.id}
                 onMarkRead={handleMarkRead}
                 onDelete={handleDelete}
+                onConfirmReceived={handleConfirmReceived}
               />
             ))}
           </div>

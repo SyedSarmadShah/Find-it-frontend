@@ -1,257 +1,277 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import CompareMatchModal from '../../components/items/CompareMatchModal'
-import {
-  CommunityTrustSection,
-  DashboardHero,
-  NotificationPanel,
-  RecentFoundItems,
-  RecentLostItems,
-  ReportTrackerPanel,
-  SearchSection,
-} from '../../components/dashboard/DashboardSections'
-import {
-  getDashboardAnalytics,
-  type DashboardAnalytics,
-  listClaimHistory,
-  getItem,
-  listItems,
-  listMatches,
-  listNotifications,
-  rejectMatch,
-  confirmMatch,
-  type Item,
-  type ItemClaim,
-  type ItemMatch,
-  type Notification,
-} from '../../services/itemService'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/ToastProvider'
+import PageHeader from '../../components/layout/PageHeader'
+import { NotificationPanel, RecentFoundItems, RecentLostItems, ReportTrackerPanel } from '../../components/dashboard/DashboardSections'
+import { getItem, listClaimHistory, listItems, listNotifications, type Item, type ItemClaim, type Notification } from '../../services/itemService'
+
+type ActivityEntry = {
+  id: string
+  title: string
+  description: string
+  timestamp: string
+  tone: 'emerald' | 'sky' | 'rose' | 'slate'
+}
+
+function sortNewestFirst(items: Item[]) {
+  return [...items].sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+}
+
+function statusProgress(status: ItemClaim['status']) {
+  switch (status) {
+    case 'pending':
+      return 25
+    case 'approved':
+      return 65
+    case 'rejected':
+      return 100
+    case 'completed':
+      return 100
+    default:
+      return 0
+  }
+}
+
+function toneClass(tone: ActivityEntry['tone']) {
+  switch (tone) {
+    case 'emerald':
+      return 'bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-100'
+    case 'sky':
+      return 'bg-sky-500/12 text-sky-700 dark:bg-sky-500/20 dark:text-sky-100'
+    case 'rose':
+      return 'bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-100'
+    default:
+      return 'bg-slate-500/12 text-slate-700 dark:bg-slate-500/20 dark:text-slate-100'
+  }
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value))
+}
+
+function buildActivityFeed(reports: (ItemClaim & { item_obj?: Item })[], notifications: Notification[]) {
+  const entries: ActivityEntry[] = []
+
+  reports.forEach((report) => {
+    entries.push({
+      id: `report-${report.id}`,
+      title: report.status === 'completed' ? 'Successful recovery' : 'Report submission',
+      description: `${report.item_title || report.item_obj?.title || `Item ${report.item}`} · ${report.status}`,
+      timestamp: report.created_at,
+      tone: report.status === 'completed' ? 'emerald' : report.status === 'approved' ? 'sky' : 'slate',
+    })
+  })
+
+  notifications.forEach((notification) => {
+    if (['claim_request_received', 'claim_approved', 'claim_rejected', 'item_returned', 'claim_awaiting_receipt'].includes(notification.type)) {
+      entries.push({
+        id: `notification-${notification.id}`,
+        title: notification.title,
+        description: notification.message,
+        timestamp: notification.created_at,
+        tone: notification.type === 'claim_rejected' ? 'rose' : notification.type === 'claim_request_received' ? 'sky' : 'emerald',
+      })
+    }
+  })
+
+  return entries.sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime()).slice(0, 8)
+}
 
 export default function DashboardPage() {
+  const { user } = useAuth()
+  const { showToast } = useToast()
   const [lostItems, setLostItems] = useState<Item[]>([])
   const [foundItems, setFoundItems] = useState<Item[]>([])
-  const [matches, setMatches] = useState<ItemMatch[]>([])
   const [reports, setReports] = useState<ItemClaim[]>([])
   const [reportsWithItems, setReportsWithItems] = useState<(ItemClaim & { item_obj?: Item })[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedMatch, setSelectedMatch] = useState<ItemMatch | null>(null)
-  const [matchLoadingId, setMatchLoadingId] = useState<number | null>(null)
-  const hasShownAnalyticsError = useRef(false)
-  const { showToast } = useToast()
-
-  const loadDashboard = async (options?: { silent?: boolean; showError?: boolean }) => {
-    const silent = options?.silent ?? false
-    const showError = options?.showError ?? true
-
-    if (!silent) {
-      setLoading(true)
-    }
-    try {
-      const [analyticsResult, lostResult, foundResult, matchResult, reportsResult, notificationsResult] = await Promise.allSettled([
-        getDashboardAnalytics(),
-        listItems({ item_type: 'lost' }),
-        listItems({ item_type: 'found' }),
-        listMatches(),
-        listClaimHistory(),
-        listNotifications(),
-      ])
-
-      if (analyticsResult.status === 'fulfilled') setAnalytics(analyticsResult.value)
-      if (lostResult.status === 'fulfilled') setLostItems(lostResult.value)
-      if (foundResult.status === 'fulfilled') setFoundItems(foundResult.value)
-      if (matchResult.status === 'fulfilled') setMatches(matchResult.value)
-      if (reportsResult.status === 'fulfilled') {
-        const fetchedReports = reportsResult.value
-        setReports(fetchedReports)
-
-        try {
-          const uniqueIds = Array.from(new Set(fetchedReports.map((r) => r.item)))
-          const itemsSettled = await Promise.allSettled(uniqueIds.map((id) => getItem(id)))
-          const itemsMap: Record<number, Item | undefined> = {}
-          itemsSettled.forEach((res, idx) => {
-            if (res.status === 'fulfilled') itemsMap[uniqueIds[idx]] = res.value
-          })
-          setReportsWithItems(fetchedReports.map((r) => ({ ...r, item_obj: itemsMap[r.item] })))
-        } catch {
-          // ignore item fetch failures — we'll still show basic report info
-          setReportsWithItems(fetchedReports)
-        }
-      }
-      if (notificationsResult.status === 'fulfilled') setNotifications(notificationsResult.value)
-
-      const failures = [analyticsResult, lostResult, foundResult, matchResult, reportsResult, notificationsResult].filter((result) => result.status === 'rejected')
-      if (failures.length && showError && !hasShownAnalyticsError.current) {
-        hasShownAnalyticsError.current = true
-        showToast('Some dashboard sections could not load right now.', 'error')
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Dashboard refresh failed', error)
-      }
-    } finally {
-      if (!silent) {
-        setLoading(false)
-      }
-    }
-  }
+  const [expandedActivity, setExpandedActivity] = useState(false)
+  const hasShownError = useRef(false)
 
   useEffect(() => {
-    void loadDashboard({ silent: false, showError: true })
+    let cancelled = false
 
-    const intervalId = window.setInterval(() => {
-      void loadDashboard({ silent: true, showError: false })
-    }, 30000)
+    const loadDashboard = async () => {
+      setLoading(true)
+      try {
+        const [lostResult, foundResult, reportsResult, notificationsResult] = await Promise.allSettled([
+          listItems({ item_type: 'lost' }),
+          listItems({ item_type: 'found' }),
+          listClaimHistory(),
+          listNotifications(),
+        ])
 
-    const onFocus = () => {
-      if (document.visibilityState === 'visible') {
-        void loadDashboard({ silent: true, showError: false })
+        if (cancelled) return
+
+        if (lostResult.status === 'fulfilled') {
+          setLostItems(sortNewestFirst(lostResult.value).filter((item) => item.owner === user?.id))
+        }
+
+        if (foundResult.status === 'fulfilled') {
+          setFoundItems(sortNewestFirst(foundResult.value).filter((item) => item.owner === user?.id))
+        }
+
+        if (reportsResult.status === 'fulfilled') {
+          const userReports = reportsResult.value.filter((report) => report.claimant === user?.id)
+          setReports(userReports)
+
+          try {
+            const uniqueIds = Array.from(new Set(userReports.map((report) => report.item)))
+            const itemsSettled = await Promise.allSettled(uniqueIds.map((id) => getItem(id)))
+            const itemsMap: Record<number, Item | undefined> = {}
+            itemsSettled.forEach((result, index) => {
+              if (result.status === 'fulfilled') {
+                itemsMap[uniqueIds[index]] = result.value
+              }
+            })
+            setReportsWithItems(userReports.map((report) => ({ ...report, item_obj: itemsMap[report.item] })))
+          } catch {
+            setReportsWithItems(userReports)
+          }
+        }
+
+        if (notificationsResult.status === 'fulfilled') {
+          setNotifications(notificationsResult.value)
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Dashboard load failed', error)
+        }
+        if (!hasShownError.current) {
+          hasShownError.current = true
+          showToast('Some dashboard data could not load right now.', 'error')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
 
-    window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', onFocus)
+    void loadDashboard()
+
+    const handleClaimsUpdated = () => {
+      void loadDashboard()
+    }
+
+    window.addEventListener('claims:updated', handleClaimsUpdated)
 
     return () => {
-      window.clearInterval(intervalId)
-      window.removeEventListener('focus', onFocus)
-      document.removeEventListener('visibilitychange', onFocus)
+      cancelled = true
+      window.removeEventListener('claims:updated', handleClaimsUpdated)
     }
-  }, [])
+  }, [showToast, user?.id])
 
-  const handleMatchReview = async (matchId: number, action: 'confirm' | 'reject') => {
-    setMatchLoadingId(matchId)
-    try {
-      if (action === 'reject') {
-        await rejectMatch(matchId)
-        showToast('Match rejected.', 'info')
-      } else {
-        await confirmMatch(matchId)
-        showToast('Match confirmed. We notified the other party.', 'success')
-        setSelectedMatch(null)
-      }
-      await loadDashboard({ silent: true, showError: false })
-    } catch {
-      showToast('Unable to update match right now.', 'error')
-    } finally {
-      setMatchLoadingId(null)
-    }
-  }
-
-  const summary = analytics?.summary
-  const mergedItems = useMemo(() => [...lostItems, ...foundItems], [foundItems, lostItems])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const normalizedQuery = searchQuery.trim().toLowerCase()
-
-  const filteredLostItems = useMemo(
-    () =>
-      lostItems.filter((item) => {
-        const matchesQuery = !normalizedQuery || [item.title, item.description, item.category, item.location].some((value) => value?.toLowerCase().includes(normalizedQuery))
-        const matchesCategory = !selectedCategory || item.category?.toLowerCase() === selectedCategory.toLowerCase()
-        return matchesQuery && matchesCategory
-      }),
-    [lostItems, normalizedQuery, selectedCategory],
-  )
-
-  const filteredFoundItems = useMemo(
-    () =>
-      foundItems.filter((item) => {
-        const matchesQuery = !normalizedQuery || [item.title, item.description, item.category, item.location].some((value) => value?.toLowerCase().includes(normalizedQuery))
-        const matchesCategory = !selectedCategory || item.category?.toLowerCase() === selectedCategory.toLowerCase()
-        return matchesQuery && matchesCategory
-      }),
-    [foundItems, normalizedQuery, selectedCategory],
-  )
-
-  const filteredMatches = useMemo(
-    () =>
-      matches
-        .filter((match) => {
-          const searchable = [match.lost_item.title, match.lost_item.description, match.lost_item.category, match.found_item.title, match.found_item.description, match.found_item.category]
-          const matchesQuery = !normalizedQuery || searchable.some((value) => value?.toLowerCase().includes(normalizedQuery))
-          const matchesCategory = !selectedCategory || [match.lost_item.category, match.found_item.category].some((value) => value?.toLowerCase() === selectedCategory.toLowerCase())
-          return matchesQuery && matchesCategory
-        })
-        .sort((left, right) => right.score_percentage - left.score_percentage),
-    [matches, normalizedQuery, selectedCategory],
-  )
-
-  const filteredNotifications = useMemo(
-    () =>
-      notifications.filter((notification) => {
-        if (!normalizedQuery) return true
-        return [notification.title, notification.message, notification.type].some((value) => value.toLowerCase().includes(normalizedQuery))
-      }),
-    [notifications, normalizedQuery],
-  )
-
-  const filteredReports = useMemo(
-    () =>
-      reportsWithItems.length ? reportsWithItems.filter((report) => {
-        if (!normalizedQuery) return true
-        return [report.item_title ?? '', report.reason, report.details, report.status].some((value) => value.toLowerCase().includes(normalizedQuery))
-      }) : reports.filter((report) => {
-        if (!normalizedQuery) return true
-        return [report.item_title ?? '', report.reason, report.details, report.status].some((value) => value.toLowerCase().includes(normalizedQuery))
-      }),
-    [normalizedQuery, reports, reportsWithItems],
-  )
-
-
-
-  const searchCount = filteredLostItems.length + filteredFoundItems.length + filteredMatches.length
+  const activityFeed = useMemo(() => buildActivityFeed(reportsWithItems, notifications), [notifications, reportsWithItems])
+  const visibleActivityFeed = expandedActivity ? activityFeed : activityFeed.slice(0, 3)
+  const hasMoreActivity = activityFeed.length > 3
+  const activeReports = useMemo(() => lostItems.length + foundItems.length, [foundItems.length, lostItems.length])
+  const pendingClaims = useMemo(() => reports.filter((report) => report.status === 'pending').length, [reports])
+  const approvedClaims = useMemo(() => reports.filter((report) => report.status === 'approved').length, [reports])
+  const successfullyReturnedItems = useMemo(() => reports.filter((report) => report.status === 'completed').length, [reports])
 
   return (
     <div className="space-y-8 pb-28">
-      <DashboardHero
-        recoveredCount={summary?.items_successfully_returned ?? 0}
-        successRate={summary?.success_percentage ?? 0}
-        activeReports={summary?.active_reports ?? 0}
+      <PageHeader
+        eyebrow="Dashboard"
+        title="Your reports, claims, and updates"
+        description="Manage your lost and found reports, track claim progress, and keep up with notifications in one place."
       />
 
-      <SearchSection
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        resultCount={searchCount}
-      />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-[1.75rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Active reports</p>
+          <p className="mt-3 font-display text-3xl font-bold text-slate-950 dark:text-white">{activeReports}</p>
+        </article>
+        <article className="rounded-[1.75rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Pending claims</p>
+          <p className="mt-3 font-display text-3xl font-bold text-slate-950 dark:text-white">{pendingClaims}</p>
+        </article>
+        <article className="rounded-[1.75rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Approved claims</p>
+          <p className="mt-3 font-display text-3xl font-bold text-slate-950 dark:text-white">{approvedClaims}</p>
+        </article>
+        <article className="rounded-[1.75rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Successfully returned items</p>
+          <p className="mt-3 font-display text-3xl font-bold text-slate-950 dark:text-white">{successfullyReturnedItems}</p>
+        </article>
+      </section>
 
-
-      <ReportTrackerPanel reports={filteredReports} />
-
-      <div className="grid gap-8 xl:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-2">
         <RecentLostItems
-          title="Recent lost items"
-          eyebrow="Recent lost items"
-          items={filteredLostItems}
-          emptyTitle="No recent lost items yet"
-          emptyDescription="Students have not posted any lost reports that match your current filter."
+          title="My lost reports"
+          eyebrow="My reports"
+          items={lostItems}
+          emptyTitle="No lost reports yet"
+          emptyDescription="Create a lost report to start tracking it here."
           tone="lost"
         />
         <RecentFoundItems
-          title="Recent found items"
-          eyebrow="Recent found items"
-          items={filteredFoundItems}
-          emptyTitle="No recent found items yet"
-          emptyDescription="As soon as someone posts a found item, it will appear here."
+          title="My found reports"
+          eyebrow="My reports"
+          items={foundItems}
+          emptyTitle="No found reports yet"
+          emptyDescription="Post a found report and it will appear here."
           tone="found"
         />
-      </div>
+      </section>
 
-      <NotificationPanel notifications={filteredNotifications} />
+      <section className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
+        <ReportTrackerPanel reports={reportsWithItems} />
 
-      <CommunityTrustSection summary={summary} />
+        <div className="space-y-4">
+          <NotificationPanel notifications={notifications} />
+          <section className="space-y-4 rounded-[2rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5 sm:p-6">
+            <div className="max-w-3xl space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500 dark:text-slate-400 sm:text-sm sm:tracking-[0.22em]">Activity feed</p>
+              <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">Recent actions and recoveries</h2>
+              <p className="text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-base">A quick timeline of submissions, claim requests, approvals, and successful recoveries.</p>
+            </div>
 
-      <CompareMatchModal
-        open={Boolean(selectedMatch)}
-        match={selectedMatch}
-        onClose={() => setSelectedMatch(null)}
-        onConfirm={selectedMatch?.can_review ? () => void handleMatchReview(selectedMatch.id, 'confirm') : undefined}
-        onReject={selectedMatch?.can_review ? () => void handleMatchReview(selectedMatch.id, 'reject') : undefined}
-        busy={matchLoadingId === selectedMatch?.id}
-      />
+            {loading ? (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">Loading activity...</div>
+            ) : activityFeed.length ? (
+              <>
+              <div className="grid gap-3">
+                {visibleActivityFeed.map((entry) => (
+                  <article key={entry.id} className="flex gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
+                    <div className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${toneClass(entry.tone)}`}>
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em]">{entry.title.slice(0, 2)}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-slate-950 dark:text-white">{entry.title}</h3>
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{entry.description}</p>
+                      <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{formatDateTime(entry.timestamp)}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {hasMoreActivity ? (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedActivity((current) => !current)}
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                  >
+                    {expandedActivity ? 'Show less' : 'See more'}
+                  </button>
+                </div>
+              ) : null}
+              </>
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">Your recent actions will appear here once you begin reporting or reviewing items.</div>
+            )}
+          </section>
+        </div>
+      </section>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import HomePage from '../pages/home/HomePage'
 import AppShell from '../components/layout/AppShell'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import LoginPage from '../pages/auth/LoginPage'
@@ -15,7 +16,7 @@ import ClaimReviewQueuePage from '../pages/items/ClaimReviewQueuePage'
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 

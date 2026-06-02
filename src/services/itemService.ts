@@ -50,7 +50,7 @@ export type Notification = {
   user: number
   title: string
   message: string
-  type: 'new_match_found' | 'claim_request_received' | 'claim_approved' | 'claim_rejected' | 'item_returned' | 'new_comment' | 'admin_announcement'
+  type: 'new_match_found' | 'claim_request_received' | 'claim_approved' | 'claim_rejected' | 'claim_awaiting_receipt' | 'claim_completed' | 'item_returned' | 'new_comment' | 'admin_announcement'
   reference_id?: number | null
   is_read: boolean
   created_at: string
@@ -207,6 +207,11 @@ export async function reportItem(payload: { item: number; reason: string; detail
 
 export async function listNotifications() {
   const { data } = await api.get<Notification[]>('/messaging/notifications/')
+  return data
+}
+
+export async function confirmClaimReceived(id: number) {
+  const { data } = await api.post<ItemClaim>(`/items/claims/${id}/confirm-received/`)
   return data
 }
 

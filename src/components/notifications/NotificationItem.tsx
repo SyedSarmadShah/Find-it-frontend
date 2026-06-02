@@ -8,9 +8,10 @@ type NotificationItemProps = {
   busy?: boolean
   onMarkRead: (id: number) => void
   onDelete: (id: number) => void
+  onConfirmReceived?: (claimId: number) => void
 }
 
-export default function NotificationItem({ notification, compact = false, busy = false, onMarkRead, onDelete }: NotificationItemProps) {
+export default function NotificationItem({ notification, compact = false, busy = false, onMarkRead, onDelete, onConfirmReceived }: NotificationItemProps) {
   const unread = !notification.is_read
 
   return (
@@ -28,14 +29,14 @@ export default function NotificationItem({ notification, compact = false, busy =
           aria-label={unread ? 'Mark notification as read' : 'Notification already read'}
         />
 
-        <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="min-w-0 font-semibold text-ink dark:text-paper">{notification.title}</p>
+            <p className="min-w-0 font-semibold text-black dark:text-paper">{notification.title}</p>
             <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${notificationTypeTones[notification.type]}`}>
               {notificationTypeLabels[notification.type]}
             </span>
           </div>
-          <p className={`mt-2 text-sm leading-6 ${compact ? 'text-ink/65 dark:text-paper/65' : 'text-ink/70 dark:text-paper/70'}`}>
+          <p className={`mt-2 text-sm leading-6 ${compact ? 'text-black/65 dark:text-paper/65' : 'text-black/70 dark:text-paper/70'}`}>
             {notification.message}
           </p>
           {notification.type === 'claim_request_received' ? (
@@ -48,9 +49,21 @@ export default function NotificationItem({ notification, compact = false, busy =
               </Link>
             </div>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink/45 dark:text-paper/45">
+          {notification.type === 'claim_awaiting_receipt' && notification.reference_id ? (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => onConfirmReceived?.(notification.reference_id as number)}
+                disabled={busy}
+                className="inline-flex items-center rounded-full border border-black/10 px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-black/5 dark:border-white/10 dark:text-paper dark:hover:bg-white/10"
+              >
+                Mark received
+              </button>
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-black/45 dark:text-paper/45">
             <span>{formatNotificationTimestamp(notification.created_at)}</span>
-            {unread ? <span className="rounded-full bg-moss/10 px-2 py-1 font-semibold text-moss dark:bg-moss/20 dark:text-paper">Unread</span> : null}
+            {unread ? <span className="rounded-full bg-moss/10 px-2 py-1 font-semibold text-black dark:bg-moss/20 dark:text-paper">Unread</span> : null}
           </div>
         </div>
 

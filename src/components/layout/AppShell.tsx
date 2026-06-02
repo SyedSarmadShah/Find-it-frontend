@@ -22,6 +22,15 @@ export default function AppShell() {
   })
 
   const displayName = useMemo(() => user?.full_name || user?.email || 'Campus user', [user])
+  const mobileMenuIcon = menuOpen ? (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  ) : (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
 
   useEffect(() => {
     const root = document.documentElement
@@ -65,7 +74,7 @@ export default function AppShell() {
 
           <div className="hidden items-center gap-2 lg:flex">
             <NavLink to="/dashboard" className={navClass}>
-              Home
+              Dashboard
             </NavLink>
             <NavLink to="/items/lost" className={navClass}>
               Lost Items
@@ -100,16 +109,17 @@ export default function AppShell() {
             <button
               type="button"
               onClick={() => setMenuOpen((current) => !current)}
-              className="rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-ink shadow-sm transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-paper dark:hover:bg-white/10"
+              className="grid h-11 w-11 place-items-center rounded-full border border-black/10 bg-white/70 text-ink shadow-sm transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-paper dark:hover:bg-white/10"
+              aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={menuOpen}
               aria-controls="mobile-drawer"
             >
-              {menuOpen ? 'Close' : 'Menu'}
+              {mobileMenuIcon}
             </button>
           </div>
         </div>
 
-        <div className={`fixed inset-0 z-40 lg:hidden ${menuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-50 lg:hidden ${menuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
           <button
             type="button"
             aria-label="Close mobile menu overlay"
@@ -118,7 +128,7 @@ export default function AppShell() {
           />
           <aside
             id="mobile-drawer"
-            className={`absolute right-0 top-0 flex h-full w-[min(88vw,20rem)] flex-col gap-3 overflow-y-auto border-l border-black/5 bg-[color:var(--app-bg)] p-4 shadow-[0_30px_100px_rgba(11,23,39,0.24)] transition-transform duration-300 dark:border-white/10 dark:bg-[color:var(--app-bg)] ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            className={`absolute right-0 top-0 flex h-[calc(100dvh-5.75rem)] w-[min(88vw,20rem)] flex-col gap-3 overflow-y-auto border-l border-black/5 bg-[color:var(--app-bg)] p-4 pb-8 shadow-[0_30px_100px_rgba(11,23,39,0.24)] transition-transform duration-300 dark:border-white/10 dark:bg-[color:var(--app-bg)] sm:h-[calc(100dvh-6.5rem)] ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
           >
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs font-semibold uppercase tracking-[0.24em] text-ink/45 dark:text-paper/45">Navigation</span>
@@ -128,7 +138,7 @@ export default function AppShell() {
             </div>
             <div className="grid gap-2 rounded-[1.5rem] border border-black/5 bg-white/80 p-3 shadow-glow backdrop-blur dark:border-white/10 dark:bg-white/5">
             <NavLink to="/dashboard" className={navClass} onClick={() => setMenuOpen(false)}>
-              Home
+                Dashboard
             </NavLink>
             <NavLink to="/items/lost" className={navClass} onClick={() => setMenuOpen(false)}>
               Lost Items
@@ -147,12 +157,6 @@ export default function AppShell() {
               }
             >
               Report Item
-            </NavLink>
-            <NavLink to="/dashboard#my-reports" className={navClass} onClick={() => setMenuOpen(false)}>
-              My Reports
-            </NavLink>
-            <NavLink to="/profile" className={navClass} onClick={() => setMenuOpen(false)}>
-              Profile
             </NavLink>
             <NavLink to="/notifications" className={navClass} onClick={() => setMenuOpen(false)}>
               Notifications
@@ -176,7 +180,7 @@ export default function AppShell() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2">
           <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-ink' : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink/70') }>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 13l9-9 9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span>Home</span>
+            <span>Dashboard</span>
           </NavLink>
           <NavLink to="/items/lost" className={({ isActive }) => (isActive ? 'flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-ink' : 'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink/70') }>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2v20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

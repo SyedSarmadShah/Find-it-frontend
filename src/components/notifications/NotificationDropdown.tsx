@@ -12,6 +12,7 @@ type NotificationDropdownProps = {
   onMarkRead: (id: number) => void
   onDelete: (id: number) => void
   onMarkAllRead: () => void
+  onConfirmReceived?: (claimId: number) => void
 }
 
 export default function NotificationDropdown({
@@ -24,6 +25,7 @@ export default function NotificationDropdown({
   onMarkRead,
   onDelete,
   onMarkAllRead,
+  onConfirmReceived,
 }: NotificationDropdownProps) {
   const unreadCount = notifications.filter((notification) => !notification.is_read).length
 
@@ -82,6 +84,7 @@ export default function NotificationDropdown({
                 busy={busyId === notification.id}
                 onMarkRead={onMarkRead}
                 onDelete={onDelete}
+                onConfirmReceived={onConfirmReceived}
                 compact
               />
             ))}

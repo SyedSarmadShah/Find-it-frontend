@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { DashboardSummary, Item, ItemClaim, ItemMatch, Notification } from '../../services/itemService'
+import { confirmClaimReceived } from '../../services/itemService'
+import { useAuth } from '../../context/AuthContext'
 
 type SearchSectionProps = {
   query: string
@@ -14,6 +16,11 @@ type DashboardHeroProps = {
   recoveredCount: number
   successRate: number
   activeReports: number
+  query: string
+  onQueryChange: (value: string) => void
+  selectedCategory: string
+  onCategoryChange: (category: string) => void
+  resultCount: number
 }
 
 type AIMatchSuggestionsProps = {
@@ -255,18 +262,27 @@ export function CategoryFilters({ selectedCategory, onCategoryChange }: Pick<Sea
   )
 }
 
-export function DashboardHero({ recoveredCount, successRate, activeReports }: DashboardHeroProps) {
+export function DashboardHero({
+  recoveredCount,
+  successRate,
+  activeReports,
+  query,
+  onQueryChange,
+  selectedCategory,
+  onCategoryChange,
+  resultCount,
+}: DashboardHeroProps) {
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(240,253,244,0.95))] shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.88),rgba(8,47,73,0.84))]">
-      <div className="p-6 sm:p-8 lg:p-10">
-        <div className="space-y-6">
+      <div className="p-5 sm:p-8 lg:p-10">
+        <div className="space-y-7">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur dark:border-emerald-500/20 dark:bg-white/5 dark:text-slate-100">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
             Campus recovery made simple
           </div>
 
-          <div className="space-y-4">
-            <h1 className="max-w-2xl whitespace-nowrap font-display text-[clamp(2.25rem,4.8vw,4rem)] font-bold tracking-tight leading-none text-slate-950 dark:text-white">
+          <div className="space-y-3">
+            <h1 className="max-w-2xl font-display text-[clamp(2.25rem,4.8vw,4rem)] font-bold tracking-tight leading-none text-slate-950 dark:text-white sm:whitespace-nowrap">
               Lost Something on Campus?
             </h1>
             <p className="max-w-2xl text-base leading-8 text-slate-600 dark:text-slate-300 sm:text-lg">
@@ -274,16 +290,45 @@ export function DashboardHero({ recoveredCount, successRate, activeReports }: Da
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="space-y-4">
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 dark:text-slate-500">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M21 21l-4.35-4.35" />
+                  <circle cx="10" cy="10" r="6" />
+                </svg>
+              </span>
+              <input
+                value={query}
+                onChange={(event) => onQueryChange(event.target.value)}
+                placeholder="Search wallet, keys, ID card, calculator..."
+                className="h-14 w-full rounded-[1.5rem] border border-slate-200 bg-white px-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-slate-950/40 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-white/5 sm:h-16"
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-4 hidden items-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 sm:flex dark:text-slate-500">
+                Instant search
+              </div>
+            </div>
+
+            <CategoryFilters selectedCategory={selectedCategory} onCategoryChange={onCategoryChange} />
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-white/5 dark:text-slate-300">
+              <p>
+                Showing <span className="font-semibold text-slate-900 dark:text-white">{resultCount}</span> matching items
+              </p>
+              {selectedCategory ? <p>Filtered by {selectedCategory}</p> : <p>Across all categories</p>}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
             <Link
               to="/items/new"
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="inline-flex h-14 items-center justify-center rounded-full bg-slate-950 px-6 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
               Report Lost Item
             </Link>
             <Link
               to="/items/new"
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+              className="inline-flex h-14 items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             >
               Report Found Item
             </Link>
@@ -466,71 +511,122 @@ export function RecentFoundItems(props: RecentItemsProps) {
 }
 
 export function ReportTrackerPanel({ reports }: ReportTrackerProps) {
+  const { user } = useAuth()
+  const [busyId, setBusyId] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState(false)
+  const visibleReports = expanded ? reports : reports.slice(0, 2)
+  const hasMoreReports = reports.length > 2
+
+  const handleConfirmReceived = async (claimId: number) => {
+    setBusyId(claimId)
+    try {
+      await confirmClaimReceived(claimId)
+      window.dispatchEvent(new Event('claims:updated'))
+    } catch {
+      // show a simple alert as a fallback — the parent app has a toast provider but not available here
+      // prefer to keep UI silent here; the dashboard will refresh on failure-free operations
+    } finally {
+      setBusyId(null)
+    }
+  }
   return (
-    <section id="my-reports" className="space-y-4 rounded-[2rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5 sm:p-6">
+    <section id="my-claims" className="space-y-4 rounded-[2rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5 sm:p-6">
       <SectionHeading
-        eyebrow="My reports"
-        title="Track your claims and recovery progress"
-        description="Every claim and update stays visible so students can understand what is happening without chasing support."
+        eyebrow="My claims"
+        title="Track claim status and approval progress"
+        description="Every submitted claim stays visible so you can see where it stands without chasing support."
       />
 
       {reports.length ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {reports.slice(0, 4).map((report) => {
-            const progress = getReportProgress(report.status)
-            return (
-              <article key={report.id} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-4">
-                    {report.item_obj ? (
-                      <img src={report.item_obj.image_url ?? report.item_obj.image ?? LOST_PLACEHOLDER_IMAGE} alt={report.item_obj.title} className="h-20 w-28 rounded-md object-cover" />
-                    ) : (
-                      <div className="h-20 w-28 rounded-md bg-slate-100 dark:bg-slate-900/40" />
-                    )}
+        <>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {visibleReports.map((report) => {
+              const progress = getReportProgress(report.status)
 
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Claim #{report.id}</p>
-                      <h3 className="mt-2 font-display text-xl font-bold tracking-tight text-slate-950 dark:text-white">{report.item_title || report.item_obj?.title || `Item ${report.item}`}</h3>
-                      {report.item_obj ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{report.item_obj.location} · {report.item_obj.category}</p> : null}
+              return (
+                <article key={report.id} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-4">
+                      {report.item_obj ? (
+                        <img src={report.item_obj.image_url ?? report.item_obj.image ?? LOST_PLACEHOLDER_IMAGE} alt={report.item_obj.title} className="h-20 w-28 rounded-md object-cover" />
+                      ) : (
+                        <div className="h-20 w-28 rounded-md bg-slate-100 dark:bg-slate-900/40" />
+                      )}
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Claim #{report.id}</p>
+                        <h3 className="mt-2 font-display text-xl font-bold tracking-tight text-slate-950 dark:text-white">{report.item_title || report.item_obj?.title || `Item ${report.item}`}</h3>
+                        {report.item_obj ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{report.item_obj.location} · {report.item_obj.category}</p> : null}
+                      </div>
+                    </div>
+
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${statusTone(report.status)}`}>
+                      {report.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>{getReportNextStep(report.status)}</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-200 dark:bg-white/10">
+                      <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
                     </div>
                   </div>
 
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${statusTone(report.status)}`}>
-                    {report.status}
-                  </span>
-                </div>
+                  <div className="mt-4 grid gap-3 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Created</p>
+                      <p className="mt-1">{formatDate(report.created_at)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Updated</p>
+                      <p className="mt-1">{timeAgo(report.updated_at)}</p>
+                    </div>
+                  </div>
 
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
-                    <span>{getReportNextStep(report.status)}</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-200 dark:bg-white/10">
-                    <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Created</p>
-                    <p className="mt-1">{formatDate(report.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Updated</p>
-                    <p className="mt-1">{timeAgo(report.updated_at)}</p>
-                  </div>
-                </div>
-
-                <Link
-                  to={`/items/${report.item}`}
-                  className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-                >
-                  Review item
-                </Link>
-              </article>
-            )
-          })}
-        </div>
+                  {report.status === 'approved' && user?.id === report.claimant ? (
+                    <div className="mt-5 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => void handleConfirmReceived(report.id)}
+                        disabled={busyId === report.id}
+                        className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                      >
+                        {busyId === report.id ? 'Processing...' : 'Mark received'}
+                      </button>
+                      <Link
+                        to={`/items/${report.item}`}
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                      >
+                        Review item
+                      </Link>
+                    </div>
+                  ) : (
+                    <Link
+                      to={`/items/${report.item}`}
+                      className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                    >
+                      Review item
+                    </Link>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+          {hasMoreReports ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setExpanded((current) => !current)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+              >
+                {expanded ? 'Show less' : 'See more'}
+              </button>
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
           You have no active reports yet. Start by reporting a lost or found item to create your recovery trail.
@@ -664,6 +760,10 @@ export function StatisticsCards({ summary, averageMatchTime }: StatisticsCardsPr
 }
 
 export function NotificationPanel({ notifications }: NotificationPanelProps) {
+  const [expanded, setExpanded] = useState(false)
+  const visibleNotifications = expanded ? notifications : notifications.slice(0, 3)
+  const hasMoreNotifications = notifications.length > 3
+
   return (
     <section className="space-y-4 rounded-[2rem] border border-slate-200/70 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/5 sm:p-6">
       <SectionHeading
@@ -673,24 +773,37 @@ export function NotificationPanel({ notifications }: NotificationPanelProps) {
       />
 
       {notifications.length ? (
-        <div className="grid gap-3">
-          {notifications.slice(0, 5).map((notification) => (
-            <article key={notification.id} className="flex gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
-              <div className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${notificationTone(notification.type)}`}>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">{notification.type.slice(0, 2)}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-slate-950 dark:text-white">{notification.title}</h3>
-                  {!notification.is_read ? <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> : null}
+        <>
+          <div className="grid gap-3">
+            {visibleNotifications.map((notification) => (
+              <article key={notification.id} className="flex gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
+                <div className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${notificationTone(notification.type)}`}>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">{notification.type.slice(0, 2)}</span>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{notification.message}</p>
-                <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{timeAgo(notification.created_at)}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : (
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-slate-950 dark:text-white">{notification.title}</h3>
+                    {!notification.is_read ? <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> : null}
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{notification.message}</p>
+                  <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{timeAgo(notification.created_at)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+          {hasMoreNotifications ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setExpanded((current) => !current)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+              >
+                {expanded ? 'Show less' : 'See more'}
+              </button>
+            </div>
+                ) : null}
+              </>
+            ) : (
         <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
           Match alerts and claim updates will appear here once the platform starts finding relevant items.
         </div>

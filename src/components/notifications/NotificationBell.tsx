@@ -6,6 +6,7 @@ import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  confirmClaimReceived,
   type Notification,
 } from '../../services/itemService'
 import NotificationDropdown from './NotificationDropdown'
@@ -124,6 +125,25 @@ export default function NotificationBell() {
     }
   }
 
+  const handleConfirmReceived = async (claimId: number) => {
+    const previous = notifications.slice()
+    setBusyId(claimId)
+    // optimistic update: mark notification(s) referring to this claim as read
+    setNotifications((current) => current.map((n) => (n.reference_id === claimId ? { ...n, is_read: true } : n)))
+    // notify other parts of the UI immediately
+    window.dispatchEvent(new Event('claims:updated'))
+    try {
+      await confirmClaimReceived(claimId)
+      showToast('Marked as received. Claim completed.', 'success')
+    } catch {
+      // revert optimistic change on failure
+      setNotifications(previous)
+      showToast('Unable to confirm receipt right now.', 'error')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const handleMarkAllRead = async () => {
     setAllBusy(true)
     try {
@@ -169,6 +189,7 @@ export default function NotificationBell() {
           onMarkRead={handleMarkRead}
           onDelete={handleDelete}
           onMarkAllRead={handleMarkAllRead}
+          onConfirmReceived={handleConfirmReceived}
         />
       </div>
     </div>

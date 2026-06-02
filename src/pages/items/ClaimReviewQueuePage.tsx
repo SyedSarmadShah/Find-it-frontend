@@ -58,6 +58,15 @@ export default function ClaimReviewQueuePage() {
 
   useEffect(() => {
     void loadClaims()
+
+    const handleClaimsUpdated = () => {
+      void loadClaims()
+    }
+    window.addEventListener('claims:updated', handleClaimsUpdated)
+
+    return () => {
+      window.removeEventListener('claims:updated', handleClaimsUpdated)
+    }
   }, [])
 
   const pendingClaims = useMemo(() => claims.filter((claim) => claim.status === 'pending'), [claims])

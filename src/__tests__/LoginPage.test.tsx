@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 const navigateMock = vi.fn()
 const loginMock = vi.fn()
